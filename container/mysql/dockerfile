@@ -1,0 +1,7 @@
+FROM mysql:8.0.20
+
+ENV MYSQL_DATABASE myapi
+
+RUN apt-get update -y
+
+EXPOSE 3306
