@@ -23,17 +23,15 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-# RUN useradd -G www-data,root -u $uid -d /home/$user $user
-# RUN mkdir -p /home/$user/.composer && \
-#     chown -R $user:$user /home/$user
 
 # Set working directory
 WORKDIR /var/www
 
-# EXPOSE 8750
+RUN cat /usr/local/etc/php/php.ini-development | sed "s/max_file_uploads = 20/max_file_uploads = 25/g" | sed "s/memory_limit = 128M/memory_limit = 200M/g" | sed "s/post_max_size = 8M/post_max_size = 200M/g" | sed "s/upload_max_filesize = 2M/upload_max_filesize = 200M/g" > /tmp/php.ini 
 
-# USER $user
+RUN cat /tmp/php.ini > /usr/local/etc/php/php.ini-development
+RUN cp /tmp/php.ini /usr/local/etc/php/conf.d/php.ini
+
 
 CMD php artisan serve --host=0.0.0.0 --port=8000
 

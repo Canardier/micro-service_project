@@ -1,0 +1,26 @@
+FROM debian:buster
+
+WORKDIR /usr/src/app
+
+RUN apt-get update && apt-get install -y
+RUN apt-get install postfix -y
+RUN apt-get install telnet
+RUN apt-get install systemd -y
+RUN apt-get install build-essential -y
+
+RUN echo "root: root\nmailer-daemon: postmaster\npostmaster: root" > /etc/aliases
+
+RUN echo "2\no-reply@my_youtube.com\nroot root\n\nyes\n\n1081\n\n3" | dpkg-reconfigure postfix
+
+
+RUN service postfix restart
+
+RUN apt-get install python3-pip -y
+RUN apt-get install python3-dev -y
+RUN pip3 install --upgrade pip
+RUN pip3 install Flask twilio
+
+CMD [ "python3", "server.py" ]
+
+EXPOSE 5000
+

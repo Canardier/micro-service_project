@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //});
 
-Route::get('/home', function () {
-    return response('Hello World', 200)
+Route::get('/', function () {
+    return response('Hello good guys your are on the best container api ever. Remember this for the next... bitch!', 200)
         ->header('Content-Type', 'text/plain');
 });
 
@@ -33,6 +33,7 @@ Route::prefix('user')->group(function () {
 });
 
 Route::prefix('video')->group(function () {
+    Route::get('/{id}', [\App\Http\Controllers\VideoController::class, 'getVideo']);
     Route::delete('/{id}', [\App\Http\Controllers\VideoController::class, 'destroy']);
     Route::post('/{id}/comment', [\App\Http\Controllers\CommentsController::class, 'store']);
     Route::get('/{id}/comments', [\App\Http\Controllers\CommentsController::class, 'show']);

@@ -39,4 +39,9 @@ class Comments extends Model
         $user_id = $this->morphTo();
         return $user_id;
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

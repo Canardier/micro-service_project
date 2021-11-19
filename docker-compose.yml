@@ -20,7 +20,6 @@ services:
             - db
         ports: 
             - 8000:8000
-            - 8001:3360
         volumes:
             - ./MyApi:/var/www
         networks: 
@@ -44,23 +43,60 @@ services:
         volumes: 
         - "./container/mysql/data:/var/lib/mysql"
 
-    adminer: 
-        image: adminer
-        container_name: adminer_mysql
+    nuxt:
+        build: ./container/nuxtjs/
+        container_name: nuxtjs
+        restart: on-failure
+        networks: 
+            - myyoutube
+        volumes: 
+            - "./nodejs:/usr/src/nuxt-app/"
+        ports: 
+            - 3000:3000
+
+    elasticsearch:
+        image: elasticsearch:7.13.2
+        container_name: ELK
         networks: 
             - myyoutube
         ports: 
-        - "9040:8080"
-        restart: on-failure
+            - "9200:9200"
+        environment: 
+            - discovery.type=single-node
+        ulimits: 
+            memlock:
+                soft: -1
+                hard: -1
+        volumes:
+            - ./container/elasticsearch:/usr/share/elasticsearch/data
 
-    # nginx:
-    #     image: nginx:1.17-alpine
-    #     container_name: nginx
-    #     restart: unless-stopped
-    #     ports:
-    #         - 8000:80
-    #     volumes:
-    #         - ./MyApi:/var/www
-    #         - ./container/nginx:/etc/nginx/conf.d
-    #     networks:
-    #         - myyoutube
+    kibana:
+        image: kibana:7.9.2
+        container_name: kibana
+        networks:
+            - myyoutube
+        ports:
+            - '5601:5601'
+
+    encoding:
+        build: ./container/encoding
+        container_name: encoding_vdo
+        networks: 
+            - myyoutube
+        ports: 
+            - "6000:5000"
+        volumes: 
+            - "./encoding_video:/usr/src/app"
+            - "./MyApi/storage/app/public:/usr/src/storage"
+
+    postfix:
+        build: ./container/postfix
+        container_name: postfix
+        networks: 
+            - myyoutube
+        ports:
+            - "5185:185"
+            - "5001:5000"
+        tty: true
+        volumes: 
+            - "./postfix:/usr/src/app"

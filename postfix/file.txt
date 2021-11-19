@@ -1,0 +1,8 @@
+mail from:<no-reply@my_youtube.com>
+rcpt to:<joffrey.studer@gmail.com>
+data
+To: joffrey.studer@gmail.com
+From: no-reply@my_youtube.com
+Subject: Hey my first email
+This is my first email on debian postfix after installing configuring it.
+It was easy.

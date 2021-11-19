@@ -1,13 +1,6 @@
 <template>
   <div>
-    <header class="d-flex justify-content-between w-100 p-3 bg-dark">
-      <h2 class="text-bold text-white">MyYoutube</h2>
-      <NuxtLink to="/login">
-        <md-button @click="goToHome()" class="md-raised" :md-ripple="false"
-          >Signin</md-button
-        >
-      </NuxtLink>
-    </header>
+    <Header />
     <div
       class="d-flex justify-content-center align-items-center w-100 flex-column"
     >
@@ -36,13 +29,13 @@
           <div class="mr-3 w-100">
             <md-field class="mr-4" md-clearable>
               <label>Password</label>
-              <md-input v-model="password" />
+              <md-input type="password" v-model="password" />
             </md-field>
           </div>
           <div class="ml-3 w-100">
             <md-field class="ml-4" md-clearable>
               <label>Verify Password</label>
-              <md-input v-model="passwordV" />
+              <md-input type="password" v-model="passwordV" />
             </md-field>
           </div>
         </div>
@@ -57,7 +50,9 @@
 </template>
 
 <script>
+import Header from "../components/Header.vue";
 export default {
+  components: { Header },
   data() {
     return {
       username: "",
@@ -67,6 +62,11 @@ export default {
       passwordV: "",
       errorMessage: ""
     };
+  },
+  beforeCreate() {
+    let userId = this.$getCookie("user");
+    let token = this.$getCookie("token");
+    if (userId && token) this.$router.push("/videos");
   },
   methods: {
     async signup() {
@@ -80,11 +80,13 @@ export default {
         await this.$axios
           .$post("user", data)
           .then(rep => {
+            console.log(rep.data);
             this.errorMessage = "Welcome, " + rep.data.username + " !";
           })
-          .catch(err => {
-            console.log(err);
-            this.errorMessage = "Check if your entry are correct";
+          .catch(({ response }) => {
+            let rep = response.data.data;
+            if (rep.email) this.errorMessage = rep.email[0];
+            else this.errorMessage = "Check if your entry are correct";
           });
       else this.errorMessage = "Not the same password";
     }

@@ -6,9 +6,11 @@ use App\Http\Requests\UserCreation;
 use App\Http\Requests\UserLogin;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
@@ -46,6 +48,15 @@ class UserController extends Controller
             'email' => $request->get('email'),
             'password' => Hash::make($request->get('password')),
         ]);
+
+        try {
+            Http::post('postfix:5000/send', [
+                'type' => 'new_user',
+                'mail' => $request->get('email')
+            ]);
+        } catch (Exception $e) {
+
+        }
 
         return response()->json([
             'message' => 'Ok',

@@ -1,0 +1,13 @@
+FROM python:3
+
+WORKDIR /usr/src/app
+
+RUN apt-get install
+RUN apt update
+RUN echo 'Y' | apt install ffmpeg
+RUN pip install Flask twilio
+RUN pip install ffmpeg-python
+
+CMD [ "python", "server.py" ]
+
+EXPOSE 5000

@@ -1,17 +1,11 @@
 <template>
   <div>
-    <header class="d-flex justify-content-between w-100 p-3 bg-dark">
-      <h2 class="text-bold text-white">MyYoutube</h2>
-      <NuxtLink to="/login">
-        <md-button @click="goToHome()" class="md-raised" :md-ripple="false"
-          >Signin</md-button
-        >
-      </NuxtLink>
-    </header>
+    <Header />
     <div
       class="d-flex justify-content-center align-items-center w-100 flex-column"
     >
       <h1 class="mt-5 pl-4">Modify your information</h1>
+      <h3>{{ errorMessage }}</h3>
       <div class="p-5 w-50">
         <div class="d-flex align-items-center">
           <div class="mr-3 w-100">
@@ -31,32 +25,40 @@
           <label>Email</label>
           <md-input v-model="email" />
         </md-field>
-        <div class="d-flex align-items-center">
-          <div class="mr-3 w-100">
-            <md-field class="mr-4" md-clearable>
-              <label>Password</label>
-              <md-input v-model="password" />
-            </md-field>
-          </div>
-          <div class="ml-3 w-100">
-            <md-field class="ml-4" md-clearable>
-              <label>Verify Password</label>
-              <md-input v-model="passwordV" />
-            </md-field>
-          </div>
-        </div>
         <div class="d-flex justify-content-center mt-3">
           <md-button @click="modify" class="md-raised md-primary w-25"
             >Modify information</md-button
           >
+          <md-button @click="logout" class="md-raised md-primary w-25"
+            >Logout</md-button
+          >
         </div>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="mr-3 w-100">
+          <md-field class="mr-4" md-clearable>
+            <label>Password</label>
+            <md-input v-model="password" />
+          </md-field>
+        </div>
+        <div class="ml-3 w-100">
+          <md-field class="ml-4" md-clearable>
+            <label>Verify Password</label>
+            <md-input v-model="passwordV" />
+          </md-field>
+        </div>
+        <md-button @click="modify('password')" class="md-raised md-primary"
+          >Change</md-button
+        >
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Header from "../components/Header.vue";
 export default {
+  components: { Header },
   data() {
     return {
       username: "",
@@ -67,8 +69,37 @@ export default {
       errorMessage: ""
     };
   },
+  created() {
+    this.getUser();
+  },
   methods: {
-    async modify() {
+    logout() {
+      this.$deleteAllCookies();
+      this.$router.push("/");
+    },
+    async getUser() {
+      let userId = this.$getCookie("user");
+      let token = this.$getCookie("token");
+      let config = {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      };
+      await this.$axios
+        .$get(`user/${userId}`, config)
+        .then(rep => {
+          console.log(rep.data);
+          this.username = rep.data.username;
+          this.pseudo = rep.data.pseudo;
+          this.email = rep.data.email;
+        })
+        .catch(err => {
+          console.log(err);
+          this.errorMessage = "Check if your entry are correct";
+        });
+    },
+
+    async modify(edit) {
       let userId = this.$getCookie("user");
       let token = this.$getCookie("token");
 
@@ -85,14 +116,16 @@ export default {
       if (this.email) data.email = this.email;
       if (this.password) data.password = this.password;
 
+      if (edit === "password" && !this.password)
+        return (this.errorMessage = "Please enter a password");
+
       if (this.password === this.passwordV)
         await this.$axios
           .$put(`user/${userId}`, data, config)
           .then(rep => {
-            this.errorMessage = "Welcome, " + rep.data.username + " !";
+            this.errorMessage = "Changements saved";
           })
           .catch(err => {
-            console.log(err);
             this.errorMessage = "Check if your entry are correct";
           });
       else this.errorMessage = "Not the same password";

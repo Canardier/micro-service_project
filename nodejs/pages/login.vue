@@ -1,11 +1,6 @@
 <template>
   <div>
-    <header class="d-flex justify-content-between w-100 p-3 bg-dark">
-      <h2 class="text-bold text-white">MyYoutube</h2>
-      <NuxtLink to="/"
-        ><md-button class="md-raised" :md-ripple="false">Signup</md-button>
-      </NuxtLink>
-    </header>
+    <Header />
     <div
       class="d-flex justify-content-center align-items-center w-100 flex-column"
     >
@@ -36,9 +31,16 @@
 </template>
 
 <script>
+import Header from "../components/Header.vue";
 export default {
+  components: { Header },
   data() {
     return { email: "", password: "", errorMessage: "" };
+  },
+  beforeCreate() {
+    let userId = this.$getCookie("user");
+    let token = this.$getCookie("token");
+    if (userId && token) this.$router.push("/videos");
   },
   methods: {
     async login(email, password) {
@@ -52,6 +54,7 @@ export default {
           this.errorMessage = "Welcome, " + rep.data.user.username + " !";
           this.$setCookie("token", rep.data.token);
           this.$setCookie("user", rep.data.user.id);
+          this.$router.push("/videos");
         })
         .catch(err => {
           this.errorMessage = "The login or password is incorrect.";

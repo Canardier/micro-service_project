@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\VideoEncoding;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use Exception;
 use finfo;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 use Owenoj\LaravelGetId3\GetId3;
+use Illuminate\Support\Facades\Http;
+
 
 class VideoController extends Controller
 {
@@ -36,9 +39,9 @@ class VideoController extends Controller
      */
     public function store(User $id, VideoCreation $request)
     {
-
         if ($request->hasFile('source')) {
             $track = GetId3::fromUploadedFile(request()->file('source'));
+            $vdo_data = "";
 
             $video = Video::create([
                 'name' => $request->get('name'),
@@ -61,9 +64,22 @@ class VideoController extends Controller
             ]);
         }
 
+        $video_name = $request->get('name');
+        $forELK = explode(" ", $request->get('name'));
+        $elk = Http::post('ELK:9200/video/mytb', [
+            'name' => $video_name,
+            'video_id' => $video->id,
+            'tags' => $forELK
+        ]);
+
+        $vdo_data = VideoRessource::make($video);
+        $vdo_encode = Http::post('encoding_vdo:5000/convert', [
+            $vdo_data,
+        ]);
+        
         return response()->json([
             'message' => 'Ok',
-            'data' => VideoRessource::make($video),
+            'data' => $vdo_data
         ], 201);
     }
 
@@ -158,6 +174,19 @@ class VideoController extends Controller
     }
 
     /**
+     * Get a specified resource.
+     *
+     * @param Video $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getVideo(Video $id) {
+        return response()->json([
+            'message' => 'OK',
+            'data' => VideoRessource::make($id),
+        ], 200);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param int $id
@@ -178,26 +207,23 @@ class VideoController extends Controller
      */
     public function encode(Video $id, VideoEncoding $request)
     {
-        $supported_format = ['1080', '720', '480', '360', '240', '144'];
-        $supported_mimes = ['video/avi', 'video/mpeg', 'video/quicktime', 'video/mp4'];
-
-        $file_info = new finfo(FILEINFO_MIME_TYPE);
-        $mime_type = $file_info->buffer(file_get_contents($request->get('file')));
-
-        if (!in_array($request->get('format'), $supported_format) || !in_array($mime_type, $supported_mimes)) {
-            return response()->json([
-                'message' => 'Video format not supported',
-                'code' => 10001,
-            ], 400);
-        }
 
         try {
-            $id->addMediaFromUrl($request->get('file'))->withCustomProperties(['format' => $request->get('format')])->toMediaCollection('videos');
+            $id->addMedia($request->get('file_path'))->withCustomProperties(['format' => $request->get('format')])->toMediaCollection('videos');
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'File cannot be downloaded',
                 'code' => '400',
             ], 400);
+        }
+
+        try {
+            Http::post('postfix:5000/send', [
+                'type' => 'new_video',
+                'mail' => $id->user->email
+            ]);
+        } catch (Exception $e) {
+
         }
 
         return response()->json([

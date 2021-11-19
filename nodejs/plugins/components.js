@@ -2,13 +2,21 @@ import Vue from "vue";
 import {
   MdButton,
   MdContent,
-  MdTabs,
+  MdCheckbox,
   MdField,
-  MdSnackbar
+  MdSnackbar,
+  MdTabs,
+  MdCard,
 } from "vue-material/dist/components";
 import "vue-material/dist/vue-material.min.css";
 import "vue-material/dist/theme/default.css";
 import "bootstrap/dist/css/bootstrap.css";
+
+import VueMaterial from "vue-material";
+import "vue-material/dist/vue-material.min.css";
+import "vue-material/dist/theme/default.css";
+
+Vue.use(VueMaterial);
 
 export function getCookie(name) {
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
@@ -28,15 +36,16 @@ export function deleteAllCookies() {
     document.cookie = `${
       c.trim().split("=")[0]
     }=;expires=Thu, 01 Jan 1970 00:00:00 UTC;domain=localhost;path=/`;
-    window.location.href = "/";
   });
 }
 
 Vue.use(MdButton);
+Vue.use(MdCheckbox);
 Vue.use(MdField);
 Vue.use(MdContent);
 Vue.use(MdTabs);
 Vue.use(MdSnackbar);
+Vue.use(MdCard);
 
 export default ({ app }, inject) => {
   inject("setCookie", setCookie);

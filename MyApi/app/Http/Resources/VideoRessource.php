@@ -22,6 +22,7 @@ class VideoRessource extends JsonResource implements HasMedia
     {
         return [
             "id" => $this->id,
+            "name" => $this->name,
             "source" => $this->getFirstMediaUrl('videos'),
             "created_at" => $this->created_at,
             "view" => $this->view,
